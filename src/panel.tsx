@@ -189,6 +189,15 @@ async function worktreeAction(
   }
 }
 
+/** Links from GitHub's own notification list carry `notification_referrer_id`, which makes the
+ *  PR page show its "Back to notifications / Done" bar. The worker works the token out. */
+function withReferrer(item: GhNotification): string {
+  if (!item.referrer) return item.url
+  const u = new URL(item.url)
+  u.searchParams.set('notification_referrer_id', item.referrer)
+  return u.toString()
+}
+
 function Item({
   item,
   showReason,
@@ -284,7 +293,7 @@ function Item({
             tooltip="Open on GitHub"
             variant="ghost"
             size="sm"
-            onPress={() => host.call('shell.openExternal', { url: item.url })}
+            onPress={() => host.call('shell.openExternal', { url: withReferrer(item) })}
           />
           <IconButton
             icon="check"

@@ -11,6 +11,7 @@ const snap = (n: number) => ({
     type: 'PullRequest',
     author: i === 0 ? 'octocat' : null,
     state: i === 0 ? ('merged' as const) : null,
+    referrer: i === 0 ? 'NT_abc' : null,
     url: `https://github.com/acme/app/pull/${i}`,
     unread: true,
     updatedAt: '2026-11-18T10:00:00Z'
@@ -264,7 +265,9 @@ test('the open button opens the thread on GitHub', async () => {
   })
   const view = await mount(panel, { host })
   await view.press({ label: /Open .* on GitHub/ })
-  assert.deepEqual(host.callsOf('shell.openExternal'), [{ url: PR0 }])
+  assert.deepEqual(host.callsOf('shell.openExternal'), [
+    { url: `${PR0}?notification_referrer_id=NT_abc` }
+  ])
   await view.unmount()
 })
 

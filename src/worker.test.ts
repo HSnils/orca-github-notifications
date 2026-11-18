@@ -12,7 +12,7 @@ const thread = (id: string, reason: string) => ({
     url: `https://api.github.com/repos/acme/app/pulls/${id}`,
     type: 'PullRequest'
   },
-  repository: { full_name: 'acme/app', html_url: 'https://github.com/acme/app' }
+  repository: { id: 1428868808, full_name: 'acme/app', html_url: 'https://github.com/acme/app' }
 })
 
 function fakeFetch(threads: unknown[], calls: { url: string; method: string }[] = []) {
@@ -144,7 +144,7 @@ test('follows Link headers across pages and flags the page cap', async () => {
   const snap = await worker.request('notifications.refresh')
   assert.equal(snap.items.length, 10)
   assert.equal(snap.truncated, true)
-  assert.equal(urls.length, 10)
+  assert.equal(urls.filter((u) => u.includes('/notifications?')).length, 10)
   await worker.deactivate()
 })
 
@@ -246,12 +246,29 @@ test('reviewInWorktree rejects bad urls, unknown repos and fetch failures', asyn
   assert.ok(failed.error?.includes('git fetch failed'))
 })
 
+// Copied from a link on github.com/notifications (user 26026366, repo 1428868808, issue 6455355881).
+const SAMPLE_TOKEN = 'NT_kwHOAY0hftoAJlJlcG9zaXRvcnk7MTQyODg2ODgwODtJc3N1ZTs2NDU1MzU1ODgx'
+
+test('builds the same notification_referrer_id GitHub puts in its own links', () => {
+  assert.equal(main.referrerToken(26026366, 1428868808, 6455355881), SAMPLE_TOKEN)
+})
+
 test('looks up PR authors after the list, once, and keeps them', async () => {
   const urls: string[] = []
   main.deps.getToken = async () => 'tok'
   main.deps.fetch = async (url: string) => {
     urls.push(url)
-    if (url.includes('/pulls/')) return new Response(JSON.stringify({ user: { login: 'octocat' }, state: 'closed', merged: true }))
+    if (url.endsWith('/user')) return new Response(JSON.stringify({ id: 26026366 }))
+    if (url.includes('/issues/')) {
+      return new Response(
+        JSON.stringify({
+          id: 6455355881,
+          user: { login: 'octocat' },
+          state: 'closed',
+          pull_request: { merged_at: '2026-11-18T09:00:00Z' }
+        })
+      )
+    }
     return new Response(JSON.stringify([thread('7', 'review_requested')]))
   }
   const host = mockHost()
@@ -261,9 +278,10 @@ test('looks up PR authors after the list, once, and keeps them', async () => {
   const snap = await worker.request('notifications.list')
   assert.equal(snap.items[0].author, 'octocat')
   assert.equal(snap.items[0].state, 'merged')
+  assert.equal(snap.items[0].referrer, SAMPLE_TOKEN, 'the notification_referrer_id is built from ids')
   await worker.request('notifications.refresh')
   await new Promise((r) => setTimeout(r, 20))
-  assert.equal(urls.filter((u) => u.includes('/pulls/')).length, 1, 'cached after the first lookup')
+  assert.equal(urls.filter((u) => u.includes('/issues/')).length, 1, 'cached after the first lookup')
   await worker.deactivate()
 })
 

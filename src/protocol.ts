@@ -17,6 +17,8 @@ declare module 'orca' {
     author: string | null
     /** State of the PR or issue; null until looked up, or when the lookup is out of date. */
     state: 'open' | 'draft' | 'merged' | 'closed' | null
+    /** Token for `?notification_referrer_id=`, which makes GitHub show its "Done / Unsubscribe" bar on the page; null until known. */
+    referrer: string | null
     unread: boolean
     updatedAt: string
   }

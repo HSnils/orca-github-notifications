@@ -202,7 +202,7 @@ type ApiThread = {
   unread: boolean
   updated_at: string
   subject: { title: string; url: string | null; type: string }
-  repository: { full_name: string; html_url: string }
+  repository: { id?: number; full_name: string; html_url: string }
 }
 
 /** API subject URL -> browser URL; falls back to the repo page. */
@@ -218,6 +218,24 @@ export function htmlUrl(t: ApiThread): string {
   return `${base}/issues/${rest}`
 }
 
+/** The value GitHub's own notification links carry as `notification_referrer_id`. Worked out from
+ *  a real link (not documented, so GitHub may change it): "NT_" and the unpadded base64 of the
+ *  MessagePack array [1, <your user id>, "Repository;<repo id>;Issue;<issue id>"]. The "Issue" id
+ *  is the one from the issues API, also for pull requests. */
+export function referrerToken(userId: number, repoId: number, issueId: number): string {
+  const text = `Repository;${repoId};Issue;${issueId}`
+  const bytes: number[] = [0x93, 0x01]
+  const wide = userId > 0xffffffff
+  bytes.push(wide ? 0xcf : 0xce)
+  // Big-endian, 8 bytes for a wide id and 4 otherwise.
+  for (let shift = (wide ? 7 : 3) * 8; shift >= 0; shift -= 8) {
+    bytes.push(Math.floor(userId / 2 ** shift) % 256)
+  }
+  bytes.push(0xda, text.length >> 8, text.length & 255)
+  for (const ch of text) bytes.push(ch.charCodeAt(0))
+  return 'NT_' + btoa(String.fromCharCode(...bytes)).replace(/=+$/, '')
+}
+
 function toItem(t: ApiThread): GhNotification {
   return {
     id: t.id,
@@ -228,6 +246,7 @@ function toItem(t: ApiThread): GhNotification {
     url: htmlUrl(t),
     author: null,
     state: null,
+    referrer: null,
     unread: t.unread,
     updatedAt: t.updated_at
   }
@@ -243,10 +262,13 @@ export default function activate(orca: OrcaWorkerApi): void {
   let started = false
   let inflight: Promise<GhSnapshot> | null = null
   /** Thread id -> what the PR or issue looked like at `at` (the thread's updatedAt). */
-  type Meta = { author: string | null; state: GhNotification['state']; at: string }
+  type Meta = { author: string | null; state: GhNotification['state']; at: string; issueId?: number }
   let metas: Record<string, Meta> | null = null
   /** Thread id -> API url of its PR or issue, for looking the author up. */
   const subjectUrls = new Map<string, string>()
+  /** Thread id -> id of its repository, and the signed-in user's id: both go into the referrer token. */
+  const repoIds = new Map<string, number>()
+  let userId: number | null = null
   let enriching = false
 
   /** Threads marked as done but not yet sent to GitHub (Undo applies), and ones being sent. */
@@ -341,9 +363,11 @@ export default function activate(orca: OrcaWorkerApi): void {
         metas = stored && typeof stored === 'object' ? (stored as Record<string, Meta>) : {}
       }
       subjectUrls.clear()
+      repoIds.clear()
       for (const t of threads) {
         if (t.subject.url?.startsWith(`${API}/`) && /\/(pulls|issues)\/\d+$/.test(t.subject.url)) {
           subjectUrls.set(t.id, t.subject.url)
+          if (t.repository.id) repoIds.set(t.id, t.repository.id)
         }
       }
       // Threads marked as done must not reappear while they wait to be sent.
@@ -361,7 +385,10 @@ export default function activate(orca: OrcaWorkerApi): void {
   /** Adds what has been looked up; an older lookup still gives the author, only the state is stale. */
   const withMeta = (i: GhNotification): GhNotification => {
     const m = metas?.[i.id]
-    return m ? { ...i, author: m.author, state: m.at === i.updatedAt ? m.state : null } : i
+    if (!m) return i
+    const repoId = repoIds.get(i.id)
+    const referrer = userId && repoId && m.issueId ? referrerToken(userId, repoId, m.issueId) : null
+    return { ...i, author: m.author, state: m.at === i.updatedAt ? m.state : null, referrer }
   }
 
   /** Looks up missing authors a few at a time (review requests first), then republishes. Spread
@@ -374,28 +401,45 @@ export default function activate(orca: OrcaWorkerApi): void {
       if (!h) return
       const todo = snapshot.items
         // A thread is looked up again when it has updated since, as its state may have changed.
-        .filter((i) => subjectUrls.has(i.id) && metas?.[i.id]?.at !== i.updatedAt)
+        .filter(
+          (i) => subjectUrls.has(i.id) && (metas?.[i.id]?.at !== i.updatedAt || !metas?.[i.id]?.issueId)
+        )
         .sort((a, b) => Number(b.reason === 'review_requested') - Number(a.reason === 'review_requested'))
         .slice(0, AUTHORS_PER_POLL)
       let found = false
+      if (userId === null) {
+        try {
+          const res: Response = await deps.fetch(`${API}/user`, { headers: h })
+          const me = res.ok ? ((await res.json()) as { id?: number }) : null
+          if (typeof me?.id === 'number') {
+            userId = me.id
+            found = true
+          }
+        } catch {
+          // Without it links just have no referrer; tried again on a later poll.
+        }
+      }
       const queue = [...todo]
       const worker = async (): Promise<void> => {
         for (let i = queue.shift(); i; i = queue.shift()) {
           try {
-            const res: Response = await deps.fetch(subjectUrls.get(i.id)!, { headers: h })
+            // The issues endpoint answers for pull requests too, and carries the id the referrer needs.
+            const res: Response = await deps.fetch(subjectUrls.get(i.id)!.replace('/pulls/', '/issues/'), { headers: h })
             if (!res.ok) continue
             const d = (await res.json()) as {
+              id?: number
               user?: { login?: string }
               state?: string
-              merged?: boolean
-              merged_at?: string | null
               draft?: boolean
+              pull_request?: { merged_at?: string | null }
             }
             if (metas) {
               metas[i.id] = {
                 author: d.user?.login ?? null,
-                state: d.merged || d.merged_at ? 'merged' : d.state === 'closed' ? 'closed' : d.draft ? 'draft' : 'open',
-                at: i.updatedAt
+                state: d.pull_request?.merged_at ? 'merged' : d.state === 'closed' ? 'closed' : d.draft ? 'draft' : 'open',
+                at: i.updatedAt,
+                // Storage refuses undefined, so the key is only there when the id is.
+                ...(typeof d.id === 'number' ? { issueId: d.id } : {})
               }
               found = true
             }
