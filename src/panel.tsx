@@ -33,7 +33,7 @@ const snapshot = atom<GhSnapshot | null>(null)
 /** Show only review requests. Kept across panel runs. */
 const onlyReviews = atom('onlyReviews', false, { persist: 'plugin' })
 /** How the list is grouped. Kept across panel runs. */
-const groupBy = atom<'reason' | 'repo'>('groupBy', 'reason', { persist: 'plugin' })
+const groupBy = atom<'reason' | 'repo'>('groupBy', 'repo', { persist: 'plugin' })
 /** True after the first press of "Mark all read", until it is confirmed or cancelled. */
 const confirmingAll = atom(false)
 /** Which PRs already have an Orca worktree; null until the worker answers. */
@@ -247,7 +247,7 @@ function Item({
             <Badge>{REASONS[item.reason] ?? item.reason}</Badge>
             {item.author ? (
               <Text muted size="xs" truncate>
-                @{item.author}
+                {`@${item.author}`}
               </Text>
             ) : null}
           </Row>

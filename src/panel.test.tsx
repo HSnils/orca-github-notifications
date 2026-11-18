@@ -253,9 +253,9 @@ test('the Show and Group by radios mark the current mode and change the list', a
   await view.select({ label: 'Show' }, 'all')
   assert.equal(view.find({ role: 'status' })?.text, '3')
 
+  assert.ok(view.find({ text: /acme\/app \(3\)/ }), 'grouped by repo at first')
+  await view.select({ label: 'Group by' }, 'reason')
   assert.ok(view.find({ text: /Mentions \(2\)/ }))
-  await view.select({ label: 'Group by' }, 'repo')
-  assert.ok(view.find({ text: /acme\/app \(3\)/ }))
   await view.unmount()
 })
 

@@ -20,7 +20,7 @@ requests first.
 - **Orca worktrees:** a pull request that already has a worktree in Orca shows its name and a
   button to go there; one from a repo Orca knows gets a button to review it in a new worktree
   (fetches the PR head and creates a linked worktree). Needs the `orca` CLI.
-- A `...` menu in the panel: **Show** (all or reviews only), **Group by** (repo or type),
+- A `...` menu in the panel: **Show** (all or reviews only), **Group by** (repo, the default, or type),
   **Refresh** and **Mark all read**. Choices are
   remembered.
 - Errors from GitHub or the worker show in a red box at the top.
