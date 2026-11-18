@@ -1,0 +1,58 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1600px; height: 1000px; overflow: hidden; }
+  body {
+    font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+    color: #e8ecf4;
+    background:
+      radial-gradient(circle at 78% 20%, #3a4a78 0%, rgba(58, 74, 120, 0) 55%),
+      radial-gradient(circle at 12% 90%, #2b2150 0%, rgba(43, 33, 80, 0) 50%),
+      #1a2236;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 120px;
+  }
+  .copy { width: 640px; }
+  .bell { width: 120px; height: 120px; margin-bottom: 40px; position: relative; }
+  h1 { font-size: 92px; line-height: 1.02; letter-spacing: -2px; font-weight: 700; }
+  p { margin-top: 28px; font-size: 34px; line-height: 1.35; color: #a9b4cf; }
+  .panel {
+    width: 560px; background: #0e1118; border: 2px solid #2a3248; border-radius: 28px;
+    padding: 36px; box-shadow: 0 40px 90px rgba(0, 0, 0, 0.5);
+    transform: rotate(2deg);
+  }
+  .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  .head b { font-size: 30px; }
+  .count { background: #2a3248; border-radius: 999px; padding: 4px 20px; font-size: 26px; }
+  .group { font-size: 22px; color: #8793b0; margin: 22px 0 12px; }
+  .row { background: #171c27; border: 1px solid #262e42; border-radius: 16px; padding: 18px 22px; margin-bottom: 14px; }
+  .t { height: 20px; border-radius: 10px; background: #343d55; }
+  .meta { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+  .pill { font-size: 18px; border: 2px solid #3a4560; border-radius: 999px; padding: 2px 14px; color: #c3cce2; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .a { height: 14px; width: 120px; border-radius: 7px; background: #2a3248; }
+</style>
+<body>
+  <div class="copy">
+    <svg class="bell" viewBox="0 0 120 120">
+      <path d="M60 14c-18 0-30 13-30 31v22l-10 15v6h80v-6L90 67V45c0-18-12-31-30-31z" fill="#e8ecf4"/>
+      <path d="M48 98a12 12 0 0 0 24 0z" fill="#e8ecf4"/>
+      <circle cx="90" cy="26" r="20" fill="#f0883e" stroke="#1a2236" stroke-width="6"/>
+    </svg>
+    <h1>GitHub Notifications</h1>
+    <p>Review requests, mentions and everything else unread, right in Orca's sidebar.</p>
+  </div>
+  <div class="panel">
+    <div class="head"><b>GitHub Notifications</b><span class="count">5</span></div>
+    <div class="group">Review requested (2)</div>
+    <div class="row"><div class="t" style="width: 90%"></div>
+      <div class="meta"><span class="pill"><span class="dot" style="background:#3fb950"></span>Open</span><span class="a"></span></div></div>
+    <div class="row"><div class="t" style="width: 70%"></div>
+      <div class="meta"><span class="pill"><span class="dot" style="background:#3fb950"></span>Open</span><span class="a"></span></div></div>
+    <div class="group">Mentions (3)</div>
+    <div class="row"><div class="t" style="width: 80%"></div>
+      <div class="meta"><span class="pill"><span class="dot" style="background:#a371f7"></span>Merged</span><span class="a"></span></div></div>
+    <div class="row"><div class="t" style="width: 60%"></div>
+      <div class="meta"><span class="pill"><span class="dot" style="background:#f85149"></span>Closed</span><span class="a"></span></div></div>
+  </div>
+</body>

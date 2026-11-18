@@ -5,6 +5,11 @@
   "version": "0.2.0",
   "description": "Review requests, mentions and other unread GitHub notifications in an Orca sidebar panel.",
   "license": "MIT",
+  "icon": "assets/icon.png",
+  "cover": {
+    "path": "assets/cover.png",
+    "alt": "A notification bell next to the GitHub Notifications panel, listing review requests and mentions with Open, Merged and Closed pull requests."
+  },
   "engines": {
     "orca": ">=1.4.248"
   },
