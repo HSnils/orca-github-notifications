@@ -2,7 +2,7 @@
   "manifestVersion": 2,
   "id": "github-notifications",
   "name": "GitHub Notifications",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Review requests, mentions and other unread GitHub notifications in an Orca sidebar panel.",
   "license": "MIT",
   "icon": "assets/icon.png",
