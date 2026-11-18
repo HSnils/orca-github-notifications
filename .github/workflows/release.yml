@@ -1,6 +1,7 @@
 name: Release
 
 # Push a tag like v0.2.0 (after bumping "version" in orca-plugin.json) to publish a GitHub Release.
+# The notes are the commit subjects since the previous tag, plus a compare link.
 on:
   push:
     tags:
@@ -14,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Tag must match the manifest version
         run: |
@@ -27,4 +30,17 @@ jobs:
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
+        run: |
+          prev="$(git describe --tags --abbrev=0 --match 'v*' "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
+          {
+            echo "## Changes"
+            echo
+            if [ -n "$prev" ]; then
+              git log --no-merges --pretty='- %s' "$prev..$GITHUB_REF_NAME"
+              echo
+              echo "**Full Changelog**: https://github.com/$GITHUB_REPOSITORY/compare/$prev...$GITHUB_REF_NAME"
+            else
+              git log --no-merges --pretty='- %s' "$GITHUB_REF_NAME"
+            fi
+          } > notes.md
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag
