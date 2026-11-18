@@ -266,7 +266,7 @@ test('the open button opens the thread on GitHub', async () => {
   const view = await mount(panel, { host })
   await view.press({ label: /Open .* on GitHub/ })
   assert.deepEqual(host.callsOf('shell.openExternal'), [
-    { url: `${PR0}?notification_referrer_id=NT_abc` }
+    { url: `${PR0}?notification_referrer_id=NT_abc&notifications_query=is%3Aunread` }
   ])
   await view.unmount()
 })

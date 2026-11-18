@@ -302,3 +302,24 @@ test('desktop notifications follow the notification settings', async () => {
   )
   await worker.deactivate()
 })
+
+test('switching every kind off means no desktop notification at all', async () => {
+  const threads = [thread('1', 'mention')]
+  main.deps.getToken = async () => 'tok'
+  main.deps.fetch = async () => new Response(JSON.stringify(threads), { status: 200 })
+  const host = mockHost({
+    settings: {
+      notifyReviewRequests: false,
+      notifyMentions: false,
+      notifyAssignments: false,
+      notifyComments: false,
+      notifyCi: false
+    }
+  })
+  const worker = await mountWorker(main, { host })
+  await worker.request('notifications.refresh')
+  threads.push(thread('2', 'review_requested'), thread('3', 'mention'))
+  await worker.request('notifications.refresh')
+  assert.deepEqual(host.callsOf('notifications.show'), [])
+  await worker.deactivate()
+})

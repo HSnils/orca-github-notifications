@@ -25,30 +25,35 @@
       {
         "key": "notifyReviewRequests",
         "title": "Notify on review requests",
+        "description": "Desktop notification when someone requests your review. The panel lists these either way.",
         "type": "boolean",
         "default": true
       },
       {
         "key": "notifyMentions",
         "title": "Notify on mentions (you and your teams)",
+        "description": "Desktop notification when you or one of your teams is mentioned.",
         "type": "boolean",
         "default": true
       },
       {
         "key": "notifyAssignments",
         "title": "Notify on assignments",
+        "description": "Desktop notification when an issue or pull request is assigned to you.",
         "type": "boolean",
         "default": false
       },
       {
         "key": "notifyComments",
         "title": "Notify on comments",
+        "description": "Desktop notification for new comments on threads you follow.",
         "type": "boolean",
         "default": false
       },
       {
         "key": "notifyCi",
         "title": "Notify on CI activity",
+        "description": "Desktop notification for CI runs, such as a failed workflow.",
         "type": "boolean",
         "default": false
       }

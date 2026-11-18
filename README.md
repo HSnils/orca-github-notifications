@@ -27,8 +27,9 @@ requests first.
 
 ## Desktop notifications
 
-New threads trigger an Orca desktop notification. Pick which kinds in Orca's Settings, under this
-plugin:
+New threads trigger an Orca desktop notification. Pick which kinds in Orca's Settings under this
+plugin (switch them all off for none). These only control the pop-ups; the panel lists everything
+either way.
 
 | Setting | Default |
 |---|---|

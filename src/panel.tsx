@@ -195,6 +195,8 @@ function withReferrer(item: GhNotification): string {
   if (!item.referrer) return item.url
   const u = new URL(item.url)
   u.searchParams.set('notification_referrer_id', item.referrer)
+  // GitHub's own links also carry the list query the user came from.
+  u.searchParams.set('notifications_query', 'is:unread')
   return u.toString()
 }
 
