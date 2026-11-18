@@ -1,0 +1,68 @@
+{
+  "manifestVersion": 2,
+  "id": "github-notifications",
+  "name": "GitHub Notifications",
+  "version": "0.1.0",
+  "description": "Review requests, mentions and other unread GitHub notifications in an Orca sidebar panel.",
+  "license": "MIT",
+  "engines": {
+    "orca": ">=1.4.246"
+  },
+  "execution": "trusted-worker",
+  "pluginApi": 1,
+  "main": "src/worker.ts",
+  "contributes": {
+    "panels": [
+      {
+        "id": "github-notifications",
+        "title": "GitHub Notifications",
+        "icon": "blocks",
+        "entry": "src/panel.tsx",
+        "ui": "components"
+      }
+    ],
+    "settings": [
+      {
+        "key": "notifyReviewRequests",
+        "title": "Notify on review requests",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "key": "notifyMentions",
+        "title": "Notify on mentions (you and your teams)",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "key": "notifyAssignments",
+        "title": "Notify on assignments",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "key": "notifyComments",
+        "title": "Notify on comments",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "key": "notifyCi",
+        "title": "Notify on CI activity",
+        "type": "boolean",
+        "default": false
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "storage:own"
+    },
+    {
+      "kind": "notifications:show"
+    },
+    {
+      "kind": "settings:own"
+    }
+  ]
+}
