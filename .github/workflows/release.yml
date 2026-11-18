@@ -1,0 +1,30 @@
+name: Release
+
+# Push a tag like v0.2.0 (after bumping "version" in orca-plugin.json) to publish a GitHub Release.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag must match the manifest version
+        run: |
+          manifest="$(jq -r .version orca-plugin.json)"
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$manifest" != "$tag" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match orca-plugin.json version $manifest" >&2
+            exit 1
+          fi
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag

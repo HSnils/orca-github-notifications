@@ -3,7 +3,7 @@
 Orca plugin that shows and manages GitHub notifications (review requests, mentions, assignments), like https://github.com/notifications?query=is%3Aunread.
 
 ## Layout
-- `orca-plugin.json` – manifest (format 2, `trusted-worker`, `pluginApi` 1). Bump `version` and tag `vX.Y.Z` to release.
+- `orca-plugin.json` – manifest (format 2, `trusted-worker`, `pluginApi` 1). Bump `version`, commit, then `git tag -a vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z`; `.github/workflows/release.yml` checks the tag matches the manifest and creates the GitHub Release with generated notes.
 - `src/protocol.ts` – single source of truth for panel <-> worker requests/events. Edit first when adding features.
 - `src/worker.ts` – Node worker: talks to GitHub (REST `/notifications`), stores state in `orca.storage`, runs the `orca`/`git` CLIs for worktrees.
 - `src/panel.tsx` – sidebar panel (components UI, no build step).
